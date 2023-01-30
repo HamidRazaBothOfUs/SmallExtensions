@@ -1,0 +1,30 @@
+fun LifecycleOwner.IncludeAutoUpdate(viewPager:ViewPager2){
+    var skipThisTime=false
+    viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+        override fun onPageSelected(position: Int) {
+            skipThisTime=true
+        }
+    })
+    val job = lifecycleScope.launch(Dispatchers.Main, start = CoroutineStart.LAZY) {
+        repeat(3000) {
+            delay(3000)
+            if (skipThisTime){
+                skipThisTime=false
+                return@repeat
+            }
+            try {
+                var lastMoved=viewPager.currentItem
+                viewPager.adapter?.let {
+                    if(it.itemCount>lastMoved+1){
+                        viewPager.setCurrentItem(lastMoved+1,true)
+                    }else{
+                        viewPager.setCurrentItem(0,true)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+    job.start()
+}
